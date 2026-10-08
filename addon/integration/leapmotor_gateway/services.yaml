@@ -1,0 +1,21 @@
+command:
+  fields:
+    action:
+      required: true
+      example: climate_on
+      selector:
+        select:
+          options: [lock, unlock, climate_on, climate_off, quick_heat, quick_cool, defrost_windshield,
+                    battery_preheat, battery_preheat_off, close_windows, open_windows,
+                    close_sunshade, open_sunshade, close_trunk, open_trunk,
+                    start_charging, stop_charging, release_charging_cable, locate_vehicle, refresh]
+    vin:
+      required: false
+      example: LFZ00000000000047
+      selector:
+        text:
+    params:
+      required: false
+      example: '{"mode": "hot", "temperature": 22, "fan_speed": 3, "recirculation": false}'
+      selector:
+        object:

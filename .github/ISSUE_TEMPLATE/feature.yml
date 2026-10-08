@@ -1,0 +1,38 @@
+name: Feature request
+description: A new value, view or command.
+labels: [enhancement]
+body:
+  - type: markdown
+    attributes:
+      value: >-
+        Safety comes before scope. Commands that move the car or switch off protection (parking,
+        speed limit, software updates, sentry) are left out on purpose.
+  - type: dropdown
+    id: kind
+    attributes:
+      label: Kind
+      options:
+        - New value or sensor
+        - Dashboard or interface
+        - New command to the car
+        - Support for another model
+        - Documentation
+    validations:
+      required: true
+  - type: textarea
+    id: use
+    attributes:
+      label: What do you want to do with it?
+      description: The situation and the benefit, not only the feature.
+    validations:
+      required: true
+  - type: input
+    id: model
+    attributes:
+      label: Car model
+      placeholder: "T03"
+  - type: textarea
+    id: data
+    attributes:
+      label: Data from the car, if known
+      description: Field names from the app log or the Leapmotor app, without personal data.

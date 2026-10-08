@@ -1,0 +1,374 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Leapmotor Gateway",
+        "data": {
+          "host": "Host",
+          "port": "Port",
+          "token": "Token"
+        }
+      },
+      "hassio_confirm": {
+        "title": "Leapmotor Gateway",
+        "description": "Die App Leapmotor Gateway wurde gefunden. Einrichten?"
+      }
+    },
+    "error": {
+      "cannot_connect": "Gateway nicht erreichbar oder Token falsch"
+    },
+    "abort": {
+      "already_configured": "Schon eingerichtet",
+      "cannot_connect": "Gateway nicht erreichbar"
+    }
+  },
+  "services": {
+    "command": {
+      "name": "Befehl an das Auto",
+      "description": "Geht mit dem auslösenden Benutzer an die App. Rolle, Stufe und Rückfrage entscheidet die App.",
+      "fields": {
+        "action": {
+          "name": "Aktion",
+          "description": "Befehl aus der Freigabeliste"
+        },
+        "params": {
+          "name": "Parameter",
+          "description": "Nur für climate_on (mode, temperature, fan_speed, recirculation) und open_windows (percent)"
+        },
+        "vin": {
+          "name": "Fahrgestellnummer",
+          "description": "Nur nötig, wenn die App mehrere Fahrzeuge hat"
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "battery": {
+        "name": "Akku"
+      },
+      "range": {
+        "name": "Reichweite"
+      },
+      "energy": {
+        "name": "Verfügbare Energie"
+      },
+      "odometer": {
+        "name": "Kilometerstand"
+      },
+      "speed": {
+        "name": "Geschwindigkeit"
+      },
+      "gear": {
+        "name": "Gang",
+        "state": {
+          "park": "Parken",
+          "drive": "Fahren",
+          "neutral": "Neutral",
+          "reverse": "Rückwärts"
+        }
+      },
+      "charge_state": {
+        "name": "Ladezustand",
+        "state": {
+          "not_charging": "lädt nicht",
+          "charging": "lädt",
+          "finish": "fertig",
+          "error": "Fehler",
+          "setting": "wird eingestellt",
+          "regening": "rekuperiert"
+        }
+      },
+      "charge_time_left": {
+        "name": "Restladezeit"
+      },
+      "charging_power": {
+        "name": "Ladeleistung"
+      },
+      "battery_current": {
+        "name": "Batteriestrom"
+      },
+      "battery_voltage": {
+        "name": "Batteriespannung"
+      },
+      "battery_temp_min": {
+        "name": "Akkutemperatur min"
+      },
+      "outside_temp": {
+        "name": "Außentemperatur"
+      },
+      "target_temp_left": {
+        "name": "Solltemperatur"
+      },
+      "fan_speed": {
+        "name": "Gebläsestufe"
+      },
+      "sunshade": {
+        "name": "Sonnenrollo"
+      },
+      "window_fl": {
+        "name": "Fenster vorne links"
+      },
+      "window_fr": {
+        "name": "Fenster vorne rechts"
+      },
+      "window_rl": {
+        "name": "Fenster hinten links"
+      },
+      "window_rr": {
+        "name": "Fenster hinten rechts"
+      },
+      "tyre_fl": {
+        "name": "Reifendruck vorne links"
+      },
+      "tyre_fr": {
+        "name": "Reifendruck vorne rechts"
+      },
+      "tyre_rl": {
+        "name": "Reifendruck hinten links"
+      },
+      "tyre_rr": {
+        "name": "Reifendruck hinten rechts"
+      },
+      "vehicle_time": {
+        "name": "Fahrzeugdaten vom"
+      },
+      "today_driving_percent": {
+        "name": "Fahrenergie heute"
+      },
+      "today_climate_percent": {
+        "name": "Klimaenergie heute"
+      },
+      "today_other_percent": {
+        "name": "Sonstige Energie heute"
+      },
+      "week_driving_percent": {
+        "name": "Fahrenergie letzte Woche"
+      },
+      "week_climate_percent": {
+        "name": "Klimaenergie letzte Woche"
+      },
+      "week_other_percent": {
+        "name": "Sonstige Energie letzte Woche"
+      },
+      "total_energy_kwh": {
+        "name": "Gesamtenergieverbrauch"
+      },
+      "distance_7_days_km": {
+        "name": "Fahrleistung letzte 7 Tage"
+      },
+      "consumption_6_weeks": {
+        "name": "Durchschnittsverbrauch 6 Wochen"
+      },
+      "messages_unread": {
+        "name": "Ungelesene Nachrichten"
+      },
+      "last_message": {
+        "name": "Letzte Nachricht"
+      },
+      "trip_end_min": {
+        "name": "Fahrtende nach"
+      },
+      "plate": {
+        "name": "Kennzeichen"
+      },
+      "tyre_pressure": {
+        "name": "Reifendruck"
+      },
+      "charge_end_forecast": {
+        "name": "Ladeende (Prognose)"
+      },
+      "energy_to_charge": {
+        "name": "Noch zu laden"
+      },
+      "state": {
+        "name": "Zustand",
+        "state": {
+          "driving": "fährt",
+          "charging": "lädt",
+          "plugged_in": "eingesteckt",
+          "parked": "parkt"
+        }
+      },
+      "trip_distance": {
+        "name": "Fahrt Strecke"
+      },
+      "trip_duration": {
+        "name": "Fahrt Dauer"
+      },
+      "trip_energy": {
+        "name": "Fahrt Energie"
+      },
+      "trip_consumption": {
+        "name": "Fahrt Verbrauch"
+      },
+      "since_charge_distance": {
+        "name": "Seit Laden Strecke"
+      },
+      "since_charge_energy": {
+        "name": "Seit Laden Energie"
+      },
+      "since_charge_consumption": {
+        "name": "Seit Laden Verbrauch"
+      },
+      "last_charge": {
+        "name": "Letzte Ladung"
+      },
+      "charges": {
+        "name": "Ladungen"
+      },
+      "trips": {
+        "name": "Fahrten"
+      },
+      "status": {
+        "name": "Gateway-Status"
+      },
+      "approvals_pending": {
+        "name": "Offene Freigaben"
+      },
+      "last_command": {
+        "name": "Letzter Befehl"
+      }
+    },
+    "binary_sensor": {
+      "charging": {
+        "name": "Lädt"
+      },
+      "ac_cable": {
+        "name": "AC-Kabel"
+      },
+      "dc_cable": {
+        "name": "DC-Kabel"
+      },
+      "ready": {
+        "name": "Fahrbereit"
+      },
+      "climate": {
+        "name": "Klima"
+      },
+      "driver_door": {
+        "name": "Fahrertür"
+      },
+      "passenger_door": {
+        "name": "Beifahrertür"
+      },
+      "rear_left_door": {
+        "name": "Fondtür links"
+      },
+      "rear_right_door": {
+        "name": "Fondtür rechts"
+      },
+      "trunk": {
+        "name": "Kofferraum"
+      }
+    },
+    "button": {
+      "button_climate_off": {
+        "name": "Klima aus"
+      },
+      "button_quick_heat": {
+        "name": "Schnell heizen"
+      },
+      "button_quick_cool": {
+        "name": "Schnell kühlen"
+      },
+      "button_defrost_windshield": {
+        "name": "Scheibe auftauen"
+      },
+      "button_battery_preheat": {
+        "name": "Batterie vorwärmen"
+      },
+      "button_battery_preheat_off": {
+        "name": "Batterievorwärmung aus"
+      },
+      "button_close_windows": {
+        "name": "Fenster schließen"
+      },
+      "button_open_windows": {
+        "name": "Fenster öffnen (Spalt)"
+      },
+      "button_close_sunshade": {
+        "name": "Sonnenrollo schließen"
+      },
+      "button_open_sunshade": {
+        "name": "Sonnenrollo öffnen"
+      },
+      "button_close_trunk": {
+        "name": "Kofferraum schließen"
+      },
+      "button_open_trunk": {
+        "name": "Kofferraum öffnen"
+      },
+      "button_start_charging": {
+        "name": "Laden starten"
+      },
+      "button_stop_charging": {
+        "name": "Laden stoppen"
+      },
+      "button_release_charging_cable": {
+        "name": "Ladekabel freigeben"
+      },
+      "button_locate_vehicle": {
+        "name": "Fahrzeug orten (Hupe/Licht)"
+      },
+      "button_refresh": {
+        "name": "Daten abfragen"
+      },
+      "button_lock": {
+        "name": "Verriegeln"
+      },
+      "button_unlock": {
+        "name": "Entriegeln"
+      },
+      "button_climate_on": {
+        "name": "Klima an"
+      },
+      "start_climate": {
+        "name": "Klima starten"
+      }
+    },
+    "lock": {
+      "lock": {
+        "name": "Verriegelung"
+      }
+    },
+    "climate": {
+      "climate_control": {
+        "name": "Klima"
+      }
+    },
+    "image": {
+      "image": {
+        "name": "Fahrzeugbild"
+      }
+    },
+    "device_tracker": {
+      "location": {
+        "name": "Standort"
+      }
+    },
+    "select": {
+      "preset_mode": {
+        "name": "Klimamodus",
+        "state": {
+          "hot": "Heizung",
+          "cold": "Kühlung",
+          "wind": "Belüftung"
+        }
+      }
+    },
+    "number": {
+      "preset_temperature": {
+        "name": "Wunschtemperatur"
+      },
+      "preset_fan_speed": {
+        "name": "Wunschgebläse"
+      }
+    },
+    "switch": {
+      "preset_recirculation": {
+        "name": "Umluft"
+      }
+    }
+  }
+}

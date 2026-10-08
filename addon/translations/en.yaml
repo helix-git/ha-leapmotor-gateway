@@ -1,0 +1,22 @@
+configuration:
+  cloud_enabled:
+    name: Cloud enabled
+    description: Switch on once an account is added in the app. Off means no login to Leapmotor.
+  dry_run:
+    name: Dry run
+    description: Commands are checked and logged but not sent to the car.
+  demo_mode:
+    name: Demo mode
+    description: A simulated car in Berlin, no Leapmotor account needed. Nothing is sent to the cloud.
+  poll_active_s:
+    name: Polling while active (seconds)
+    description: While the car is driving, charging, plugged in or unlocked.
+  poll_idle_min:
+    name: Polling while idle (minutes)
+  notify:
+    name: Notify service for approvals
+    description: Initial value. Devices for approvals are chosen in the app.
+  approval_timeout_s:
+    name: Approval validity (seconds)
+  log_level:
+    name: Log level

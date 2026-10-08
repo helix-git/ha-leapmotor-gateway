@@ -1,0 +1,46 @@
+# Leapmotor Gateway: Home Assistant app manifest
+name: Leapmotor Gateway
+version: "0.13.5"
+slug: leapmotor_gateway
+description: The only component that talks to the Leapmotor cloud. Every command passes an allowlist, critical ones need approval on your phone.
+url: https://github.com/helix-git/ha-leapmotor-gateway
+# Prebuilt and signed images from the release workflow. Remove this line to build locally.
+image: ghcr.io/helix-git/leapmotor-gateway
+arch: [aarch64, amd64]
+init: false
+boot: manual
+ingress: true
+ingress_port: 8789
+panel_icon: mdi:car-key
+panel_title: Leapmotor
+homeassistant_api: true
+# Announces itself to the Supervisor like Music Assistant. The integration then appears
+# under Discovered.
+discovery:
+  - leapmotor_gateway
+map:
+  - addon_config:rw
+  # only for the bundled integration (custom_components/leapmotor_gateway), see apparmor.txt
+  - homeassistant_config:rw
+# Log and certificate belong in the backup, Python cache files do not.
+backup_exclude:
+  - "*.pyc"
+options:
+  cloud_enabled: false
+  dry_run: true
+  demo_mode: false
+  poll_active_s: 60
+  poll_idle_min: 15
+  notify: ""
+  approval_timeout_s: 120
+  log_level: info
+# Accounts, vehicles, PINs and the app certificate are maintained in the app (accounts.json).
+schema:
+  cloud_enabled: bool
+  dry_run: bool
+  demo_mode: bool?
+  poll_active_s: int(30,3600)
+  poll_idle_min: int(1,240)
+  notify: str
+  approval_timeout_s: int(30,900)
+  log_level: list(debug|info|warning|error)?

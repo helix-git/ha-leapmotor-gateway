@@ -1,0 +1,9 @@
+# leapmotor-api pinned exactly: commands.py uses the private _remote_control for the T03
+# climate off command.
+leapmotor-api==0.3.2
+websocket-client==1.9.*
+requests==2.34.*
+fastapi==0.142.*
+uvicorn[standard]==0.54.*
+python-multipart==0.0.*
+tzdata

@@ -1,0 +1,101 @@
+name: HAOS
+
+# The app on Home Assistant OS with the real Supervisor, AppArmor and ingress: HAOS runs in QEMU
+# with KVM on the GitHub runner. Builds the app from this commit like a local install.
+# On every pull request and push, and every night.
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    - cron: "47 2 * * *"
+  workflow_dispatch:
+    inputs:
+      haos:
+        description: Home Assistant OS version (empty for the newest release)
+        default: ""
+
+permissions:
+  contents: read
+
+jobs:
+  haos:
+    name: HAOS ${{ matrix.channel }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 50
+    strategy:
+      fail-fast: false
+      matrix:
+        # Every night also the newest beta, so a new HAOS shows problems before users get it.
+        channel: ${{ github.event_name == 'schedule' && fromJSON('["stable", "beta"]') || fromJSON('["stable"]') }}
+    steps:
+      - name: Resolve the HAOS version
+        env:
+          GH_TOKEN: ${{ github.token }}
+          WANTED: ${{ inputs.haos }}
+          CHANNEL: ${{ matrix.channel }}
+        run: |
+          if [ -n "$WANTED" ]; then v="$WANTED"
+          elif [ "$CHANNEL" = "beta" ]; then
+            v=$(gh api repos/home-assistant/operating-system/releases --jq '[.[] | select(.draft | not)][0].tag_name')
+          else
+            v=$(gh api repos/home-assistant/operating-system/releases/latest --jq .tag_name)
+          fi
+          echo "HAOS=$v" >> "$GITHUB_ENV"
+          echo "### HAOS $v ($CHANNEL)" >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.12"
+      - run: pip install --require-hashes -r .github/requirements/e2e.txt && python -m playwright install --with-deps chromium
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm.rules
+          sudo udevadm control --reload-rules && sudo udevadm trigger --name-match=kvm
+      - name: Install QEMU
+        run: sudo apt-get update -q && sudo apt-get install -y -q qemu-system-x86 qemu-utils ovmf dosfstools mtools
+      - name: Cache the HAOS image
+        id: cache
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: haos_ova-${{ env.HAOS }}.qcow2.xz
+          key: haos-${{ env.HAOS }}
+      - name: Download HAOS
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: curl -fsSLO "https://github.com/home-assistant/operating-system/releases/download/${HAOS}/haos_ova-${HAOS}.qcow2.xz"
+      - name: Boot HAOS
+        run: |
+          xz -dk "haos_ova-${HAOS}.qcow2.xz" && mv "haos_ova-${HAOS}.qcow2" haos.qcow2
+          qemu-img resize haos.qcow2 32G
+          cp /usr/share/OVMF/OVMF_VARS_4M.fd vars.fd
+          # Developer SSH on port 22222: HAOS imports authorized_keys from a drive labelled CONFIG.
+          # The key exists only for this run.
+          ssh-keygen -q -t ed25519 -N "" -f haos_key
+          mkfs.vfat -C -n CONFIG config.img 4096 >/dev/null
+          mcopy -i config.img haos_key.pub ::authorized_keys
+          # Home Assistant serves on port 80 in HAOS. 8123 only redirects there.
+          qemu-system-x86_64 -enable-kvm -cpu host -smp 4 -m 8192 -machine q35 \
+            -drive if=pflash,format=raw,readonly=on,file=/usr/share/OVMF/OVMF_CODE_4M.fd \
+            -drive if=pflash,format=raw,file=vars.fd \
+            -drive file=haos.qcow2,if=virtio,format=qcow2 \
+            -drive file=config.img,if=virtio,format=raw \
+            -netdev user,id=net0,hostfwd=tcp:127.0.0.1:8080-:80,hostfwd=tcp:127.0.0.1:22222-:22222 \
+            -device virtio-net-pci,netdev=net0 \
+            -display none -serial file:serial.log -daemonize
+      - name: Run the HAOS test
+        env:
+          HAOS_URL: http://127.0.0.1:8080
+          HAOS_KEY: haos_key
+        run: python e2e/haos.py
+      - name: Logs and screenshots
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: haos-${{ matrix.channel }}-${{ env.HAOS }}
+          path: |
+            serial.log
+            e2e/work-haos/*.log
+            e2e/work-haos/*.png
+          retention-days: 14

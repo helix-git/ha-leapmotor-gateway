@@ -1,0 +1,391 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Leapmotor Gateway</title>
+<style>
+/* Values come from the Home Assistant theme (see theme() below). These are only fallbacks. */
+:root{--primary-color:#03a9f4;--primary-text-color:#212121;--secondary-text-color:#727272;--primary-background-color:#fafafa;
+  --card-background-color:#fff;--divider-color:rgba(0,0,0,.12);--error-color:#db4437;--warning-color:#ffa600;--success-color:#43a047;
+  --ha-card-border-radius:12px;--ha-card-border-color:#e0e0e0;--ha-card-box-shadow:none;--text-primary-color:#fff}
+@media (prefers-color-scheme: dark){:root:not(.ha){--primary-text-color:#e1e1e1;--secondary-text-color:#9b9b9b;--primary-background-color:#111111;
+  --card-background-color:#1c1c1c;--divider-color:rgba(225,225,225,.12);--ha-card-border-color:rgba(225,225,225,.12)}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--primary-background-color);color:var(--primary-text-color);
+  font-family:var(--ha-font-family-body,var(--mdc-typography-font-family,Roboto,"Noto Sans",system-ui,sans-serif));font-size:14px;line-height:1.5}
+main{max-width:1040px;margin:0 auto;padding:16px}
+.head{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin:4px 4px 12px}
+.head h1{font-size:22px;font-weight:400;margin:0}
+.muted{color:var(--secondary-text-color);font-size:13px}
+.chip{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:500;padding:3px 10px;border-radius:16px;margin:2px 4px 2px 0;
+  background:color-mix(in srgb,var(--c,var(--primary-color)) 16%,transparent);
+  color:color-mix(in srgb,var(--c,var(--primary-color)) 72%,var(--primary-text-color))}
+.ok{--c:var(--success-color)} .warn{--c:var(--warning-color)} .bad{--c:var(--error-color)}
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--divider-color);margin:0 0 16px;overflow-x:auto}
+.tabs button{background:none;border:none;border-bottom:2px solid transparent;color:var(--secondary-text-color);font:inherit;font-weight:500;
+  padding:10px 14px;cursor:pointer;white-space:nowrap}
+.tabs button.on{color:var(--primary-color);border-bottom-color:var(--primary-color)}
+.card{background:var(--ha-card-background,var(--card-background-color));border:1px solid var(--ha-card-border-color,var(--divider-color));
+  border-radius:var(--ha-card-border-radius,12px);box-shadow:var(--ha-card-box-shadow,none);padding:16px;margin-bottom:16px}
+.card h2{font-size:18px;font-weight:400;margin:0 0 12px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.value{padding:10px 12px;border-radius:10px;background:color-mix(in srgb,var(--primary-text-color) 4%,transparent)}
+.value b{display:block;font-size:20px;font-weight:400;overflow-wrap:anywhere}
+.value b.text{font-size:16px;line-height:1.35}
+.vehicle{display:grid;grid-template-columns:minmax(220px,340px) 1fr;gap:16px;align-items:start}
+.vehicle img{width:100%;border-radius:10px}
+.bar{height:8px;border-radius:4px;background:var(--divider-color);overflow:hidden;margin-top:6px}
+.bar span{display:block;height:100%;background:var(--primary-color)}
+table{width:100%;border-collapse:collapse} td,th{text-align:left;padding:8px 6px;border-bottom:1px solid var(--divider-color);vertical-align:middle}
+th{color:var(--secondary-text-color);font-weight:500;font-size:13px}
+input,select{font:inherit;color:var(--primary-text-color);background:transparent;border:1px solid var(--divider-color);border-radius:8px;padding:7px 10px}
+input[type=number]{width:80px} input:focus,select:focus{outline:2px solid var(--primary-color);outline-offset:-1px}
+.btn{font:inherit;font-weight:500;border-radius:18px;padding:7px 16px;cursor:pointer;border:1px solid var(--divider-color);
+  background:transparent;color:var(--primary-color)}
+.btn.main{background:var(--primary-color);border-color:var(--primary-color);color:var(--text-primary-color,#fff)}
+.btn.bad{color:var(--error-color)} .btn:disabled{opacity:.5;cursor:default}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:8px 0}
+.entry{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--divider-color)}
+.entry .who{flex:1 1 220px;min-width:0;overflow-wrap:anywhere}
+.entry .buttons{display:flex;gap:8px;flex-wrap:wrap}
+.vform{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;align-items:end;padding:12px 0;border-bottom:1px solid var(--divider-color)}
+.vform label{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--secondary-text-color)}
+.vform input[type=text],.vform input[type=password]{width:100%}
+.vform .check{flex-direction:row;align-items:center;gap:8px;font-size:14px;color:var(--primary-text-color)}
+.hidden{display:none}
+.message{font-size:13px;margin-left:8px}
+@media (max-width:640px){.vehicle{grid-template-columns:1fr} main{padding:8px}}
+</style>
+</head>
+<body>
+<main>
+  <div class="head"><div><h1 data-t="title"></h1><div class="muted" id="status">…</div></div><div id="chips"></div></div>
+  <div class="tabs" id="tabs">
+    <button data-tab="vehicles" class="on" data-t="tab.vehicles"></button><button data-tab="accounts" data-t="tab.accounts"></button>
+    <button data-tab="security" data-t="tab.security"></button><button data-tab="log" data-t="tab.log"></button>
+  </div>
+
+  <section id="tab-vehicles"><div id="vehicles"></div>
+    <div class="card"><h2 data-t="approvals.title"></h2><div id="approvals" class="muted"></div>
+      <div class="muted" data-t="approvals.hint"></div></div></section>
+
+  <section id="tab-accounts" class="hidden">
+    <div class="card"><h2 data-t="cert.title"></h2><div id="cert" class="muted">…</div>
+      <div class="row"><label><span data-t="cert.certificate"></span> <input type="file" id="c-cert" accept=".pem,.crt"></label>
+        <label><span data-t="cert.key"></span> <input type="file" id="c-key" accept=".pem,.key"></label>
+        <button class="btn main" onclick="uploadCert(this)" data-t="cert.upload"></button><span class="message" id="c-m"></span></div>
+      <div class="muted" data-t="cert.hint"></div></div>
+    <div class="card"><h2 data-t="accounts.title"></h2><div id="accounts"></div>
+      <div class="row"><input id="a-user" data-tp="accounts.email" autocomplete="off"><input id="a-pw" type="password" data-tp="accounts.password" autocomplete="new-password">
+        <button class="btn main" onclick="addAccount(this)" data-t="accounts.add"></button><span class="message" id="a-m"></span></div>
+      <div class="muted" data-t="accounts.hint"></div></div>
+    <div class="card"><h2 data-t="vehicles.title"></h2><div id="v-list"></div>
+      <div class="muted" data-t="vehicles.hint"></div></div>
+  </section>
+
+  <section id="tab-security" class="hidden"><div class="card"><h2 data-t="tab.security"></h2>
+    <div class="row"><label><input type="checkbox" id="push"> <b data-t="sec.push"></b></label></div>
+    <div class="muted" data-t="sec.push_hint"></div>
+    <div class="row"><b data-t="sec.targets"></b></div><div id="targets" class="muted">…</div>
+    <div class="row"><b data-t="sec.people"></b></div><table id="users"></table>
+    <div class="muted" data-t="sec.roles_hint"></div>
+    <div class="row"><label><span data-t="sec.timeout"></span> <input id="timeout" type="number" min="30" max="900"> s</label>
+      <label><span data-t="sec.poll_active"></span> <input id="active" type="number" min="30" max="3600"> s</label>
+      <label><span data-t="sec.poll_idle"></span> <input id="idle" type="number" min="1" max="240"> min</label>
+      <label data-tt="sec.trip_end_hint"><span data-t="sec.trip_end"></span> <input id="trip-end" type="number" min="1" max="60"> min</label></div>
+    <div class="row"><b data-t="sec.levels"></b></div><table id="levels"></table>
+    <div class="muted" data-t="sec.levels_hint"></div>
+    <div class="row"><button class="btn main" onclick="saveSecurity(this)" data-t="save"></button><span class="message" id="s-m"></span></div>
+    <div class="muted" id="fixed"></div></div></section>
+
+  <section id="tab-log" class="hidden"><div class="card"><h2 data-t="tab.log"></h2><table id="log"></table></div></section>
+</main>
+<script>
+// Language follows the browser. German as a translation, English otherwise.
+const LANG = (navigator.language || 'en').toLowerCase().startsWith('de') ? 'de' : 'en';
+const TEXTS = {
+  en: {
+    'title': 'Leapmotor Gateway', 'tab.vehicles': 'Vehicles', 'tab.accounts': 'Accounts', 'tab.security': 'Security', 'tab.log': 'Log',
+    'approvals.title': 'Pending approvals', 'approvals.none': 'none',
+    'approvals.hint': 'Approving works only in the push notification on an unlocked phone. Here you can only reject.',
+    'approvals.expires': 'expires', 'reject': 'Reject',
+    'cert.title': 'App certificate', 'cert.certificate': 'Certificate', 'cert.key': 'Key', 'cert.upload': 'Upload',
+    'cert.hint': 'The certificate of the Leapmotor app applies to all accounts. It is not included. The app checks that key and certificate belong together. A wrong pair overwrites nothing.',
+    'cert.present': 'present', 'cert.missing': 'missing', 'cert.valid_until': 'valid until',
+    'cert.missing_hint': 'Without the certificate the gateway cannot talk to Leapmotor.', 'cert.both': 'Please choose both files',
+    'accounts.title': 'Leapmotor accounts', 'accounts.email': 'E-mail', 'accounts.password': 'Password', 'accounts.add': 'Add account',
+    'accounts.hint': 'Recommended: a second Leapmotor account the vehicles are shared with. Passwords stay in the app. Home Assistant never sees them.',
+    'accounts.none': 'No account yet.', 'accounts.vehicles': '{n} vehicle(s)', 'accounts.fetch': 'Fetch vehicles', 'accounts.fetching': 'fetching …',
+    'accounts.found': '{n} vehicle(s) found', 'accounts.change_pw': 'Change password', 'accounts.remove': 'Remove',
+    'accounts.new_pw': 'New password for this account:', 'accounts.pw_changed': 'password changed', 'accounts.added': 'added',
+    'accounts.confirm_remove': 'Remove account {name} and its vehicles from the gateway?',
+    'vehicles.title': 'Vehicles', 'vehicles.hint': 'Without a PIN the gateway can only read. The PIN is used only right before a command for exactly this vehicle.',
+    'vehicles.none': 'No vehicle yet. Use "Fetch vehicles" at the account.', 'vehicles.name': 'Name', 'vehicles.plate': 'Plate',
+    'vehicles.plate_example': 'e.g. B-LM 2026E', 'vehicles.pin': 'PIN', 'vehicles.pin_set': '•••• (set)', 'vehicles.no_pin': 'no PIN',
+    'vehicles.poll': 'poll', 'vehicles.delete_pin': 'Delete PIN', 'vehicles.saved': 'saved',
+    'vehicles.confirm_pin': 'Delete the PIN for this vehicle? The gateway can then only read it.',
+    'vehicles.empty': 'No vehicle yet. Add a Leapmotor account under Accounts and fetch vehicles.',
+    'car.locked': 'locked', 'car.open': 'open', 'car.enabled': 'enabled', 'car.disabled': 'disabled', 'car.pin_stored': 'PIN stored',
+    'car.no_pin': 'no PIN', 'car.no_image': 'no image yet', 'car.battery': 'Battery', 'car.range': 'Range', 'car.energy': 'Energy',
+    'car.odometer': 'Odometer', 'car.charging': 'Charging', 'car.charging_at': 'charging {kw} kW', 'car.plugged_in': 'plugged in', 'car.no': 'no',
+    'car.outside': 'Outside', 'car.doors': 'Doors', 'car.closed': 'closed', 'car.windows': 'Windows', 'car.windows_open': '{n} open',
+    'car.tyres': 'Tyres (bar)', 'car.climate': 'Climate', 'car.on': 'on', 'car.off': 'off', 'car.week': 'Energy last week',
+    'car.week_parts': 'Driving / climate / other', 'car.message': 'Last message', 'car.data_from': 'vehicle data from', 'car.polled': 'polled',
+    'door.driver': 'driver', 'door.passenger': 'passenger', 'door.rear_left': 'rear left', 'door.rear_right': 'rear right', 'door.trunk': 'trunk',
+    'chip.cloud_on': 'Cloud on', 'chip.cloud_off': 'Cloud off', 'chip.dry_run': 'Dry run, nothing is sent', 'chip.live': 'LIVE, commands reach the car',
+    'chip.cert_present': 'Certificate present', 'chip.cert_missing': 'Certificate missing',
+    'chip.demo': 'Demo mode, simulated car, nothing leaves the app',
+    'sec.push': 'Approval by push',
+    'sec.push_hint': 'On: commands with level approval wait for the approval in the push notification (only on an unlocked phone). Off: they run without push, but only for people with the role full, for example without the companion app or on Android below version 12.',
+    'sec.targets': 'Approvals go to', 'sec.no_app': 'no companion app found', 'sec.people': 'People', 'sec.person': 'Person', 'sec.role': 'Role',
+    'sec.roles_hint': 'full: all commands (approval commands after approval). limited: free commands only. read: none. Without an entry and for automations, limited applies. An approval can be confirmed by people with the role full and by every Home Assistant admin.',
+    'sec.no_users': 'User list not available', 'sec.timeout': 'Approval valid for', 'sec.poll_active': 'Polling active', 'sec.poll_idle': 'idle',
+    'sec.trip_end': 'Trip ends after a stop of', 'sec.trip_end_hint': 'If the car stops for a shorter time, the trip continues in the trip computer. For that long the gateway keeps polling at the active rate after parking.',
+    'sec.levels': 'Commands and levels', 'sec.command': 'Command', 'sec.level': 'Level',
+    'sec.levels_hint': 'Everything not listed here (parking, speed limit, updates, sentry and more) does not exist in the gateway.',
+    'sec.fixed': 'Only in the app options: cloud {cloud}, {mode}', 'sec.dry_run': 'dry run', 'sec.live': 'live',
+    'level.free': 'free', 'level.approval': 'approval', 'level.blocked': 'blocked', 'role.full': 'full', 'role.limited': 'limited', 'role.read': 'read',
+    'save': 'Save', 'saved_at': 'saved {time}', 'error': 'Error: {msg}',
+    'log.time': 'Time', 'log.command': 'Command', 'log.vehicle': 'Vehicle', 'log.who': 'Who', 'log.result': 'Result', 'log.empty': 'nothing yet',
+
+    'cmd.lock': 'Lock', 'cmd.climate_on': 'Climate on', 'cmd.climate_off': 'Climate off', 'cmd.quick_heat': 'Quick heat', 'cmd.quick_cool': 'Quick cool', 'cmd.defrost_windshield': 'Defrost windshield', 'cmd.battery_preheat': 'Preheat battery', 'cmd.battery_preheat_off': 'Battery preheat off', 'cmd.close_windows': 'Close windows', 'cmd.close_sunshade': 'Close sunshade', 'cmd.close_trunk': 'Close trunk', 'cmd.stop_charging': 'Stop charging', 'cmd.unlock': 'Unlock', 'cmd.open_trunk': 'Open trunk', 'cmd.open_windows': 'Open windows (gap)', 'cmd.open_sunshade': 'Open sunshade', 'cmd.release_charging_cable': 'Release charging cable', 'cmd.start_charging': 'Start charging', 'cmd.locate_vehicle': 'Locate vehicle (horn and lights)',
+  },
+  de: {
+    'title': 'Leapmotor Gateway', 'tab.vehicles': 'Fahrzeuge', 'tab.accounts': 'Konten', 'tab.security': 'Sicherheit', 'tab.log': 'Protokoll',
+    'approvals.title': 'Offene Freigaben', 'approvals.none': 'keine',
+    'approvals.hint': 'Freigeben geht nur in der Push-Nachricht am entsperrten Telefon. Hier lässt sich nur ablehnen.',
+    'approvals.expires': 'läuft ab', 'reject': 'Ablehnen',
+    'cert.title': 'App-Zertifikat', 'cert.certificate': 'Zertifikat', 'cert.key': 'Schlüssel', 'cert.upload': 'Hochladen',
+    'cert.hint': 'Das Zertifikat der Leapmotor-App gilt für alle Konten. Es wird nicht mitgeliefert. Geprüft wird, ob Schlüssel und Zertifikat zusammenpassen. Ein falsches Paar überschreibt nichts.',
+    'cert.present': 'vorhanden', 'cert.missing': 'fehlt', 'cert.valid_until': 'gültig bis',
+    'cert.missing_hint': 'Ohne Zertifikat kann das Gateway nicht mit Leapmotor sprechen.', 'cert.both': 'Bitte beide Dateien wählen',
+    'accounts.title': 'Leapmotor-Konten', 'accounts.email': 'E-Mail', 'accounts.password': 'Passwort', 'accounts.add': 'Konto hinzufügen',
+    'accounts.hint': 'Empfohlen: ein zweites Leapmotor-Konto, mit dem die Fahrzeuge in der App geteilt sind. Passwörter bleiben in der App. Home Assistant sieht sie nie.',
+    'accounts.none': 'Noch kein Konto.', 'accounts.vehicles': '{n} Fahrzeug(e)', 'accounts.fetch': 'Fahrzeuge abrufen', 'accounts.fetching': 'ruft ab …',
+    'accounts.found': '{n} Fahrzeug(e) gefunden', 'accounts.change_pw': 'Passwort ändern', 'accounts.remove': 'Entfernen',
+    'accounts.new_pw': 'Neues Passwort für dieses Konto:', 'accounts.pw_changed': 'Passwort geändert', 'accounts.added': 'angelegt',
+    'accounts.confirm_remove': 'Konto {name} und seine Fahrzeuge aus dem Gateway entfernen?',
+    'vehicles.title': 'Fahrzeuge', 'vehicles.hint': 'Ohne PIN kann das Gateway nur lesen. Der PIN wird erst unmittelbar vor einem Befehl für genau dieses Fahrzeug verwendet.',
+    'vehicles.none': 'Noch kein Fahrzeug. Beim Konto „Fahrzeuge abrufen“.', 'vehicles.name': 'Name', 'vehicles.plate': 'Kennzeichen',
+    'vehicles.plate_example': 'z. B. B-LM 2026E', 'vehicles.pin': 'PIN', 'vehicles.pin_set': '•••• (gesetzt)', 'vehicles.no_pin': 'kein PIN',
+    'vehicles.poll': 'abfragen', 'vehicles.delete_pin': 'PIN löschen', 'vehicles.saved': 'gespeichert',
+    'vehicles.confirm_pin': 'PIN für dieses Fahrzeug löschen? Danach kann das Gateway es nur noch lesen.',
+    'vehicles.empty': 'Noch kein Fahrzeug. Unter „Konten“ ein Leapmotor-Konto hinzufügen und Fahrzeuge abrufen.',
+    'car.locked': 'verriegelt', 'car.open': 'offen', 'car.enabled': 'aktiv', 'car.disabled': 'abgeschaltet', 'car.pin_stored': 'PIN hinterlegt',
+    'car.no_pin': 'kein PIN', 'car.no_image': 'noch kein Bild', 'car.battery': 'Akku', 'car.range': 'Reichweite', 'car.energy': 'Energie',
+    'car.odometer': 'Kilometerstand', 'car.charging': 'Laden', 'car.charging_at': 'lädt {kw} kW', 'car.plugged_in': 'eingesteckt', 'car.no': 'nein',
+    'car.outside': 'Außen', 'car.doors': 'Türen', 'car.closed': 'zu', 'car.windows': 'Fenster', 'car.windows_open': '{n} offen',
+    'car.tyres': 'Reifen (bar)', 'car.climate': 'Klima', 'car.on': 'an', 'car.off': 'aus', 'car.week': 'Energie letzte Woche',
+    'car.week_parts': 'Fahren / Klima / Sonstiges', 'car.message': 'Letzte Nachricht', 'car.data_from': 'Fahrzeugdaten vom', 'car.polled': 'abgefragt',
+    'door.driver': 'Fahrer', 'door.passenger': 'Beifahrer', 'door.rear_left': 'Fond l.', 'door.rear_right': 'Fond r.', 'door.trunk': 'Kofferraum',
+    'chip.cloud_on': 'Cloud an', 'chip.cloud_off': 'Cloud aus', 'chip.dry_run': 'Trockenlauf, nichts wird gesendet', 'chip.live': 'SCHARF, Befehle gehen ans Auto',
+    'chip.cert_present': 'Zertifikat vorhanden', 'chip.cert_missing': 'Zertifikat fehlt',
+    'chip.demo': 'Demo-Modus, simuliertes Auto, nichts verlässt die App',
+    'sec.push': 'Rückfrage per Push',
+    'sec.push_hint': 'An: Befehle der Stufe Rückfrage warten auf die Freigabe in der Push-Nachricht (nur am entsperrten Telefon). Aus: Sie laufen ohne Push, aber nur für Personen mit der Rolle voll, etwa ohne HA-App oder mit Android unter Version 12.',
+    'sec.targets': 'Rückfragen gehen an', 'sec.no_app': 'keine HA-App gefunden', 'sec.people': 'Personen', 'sec.person': 'Person', 'sec.role': 'Rolle',
+    'sec.roles_hint': 'voll: alle Befehle (Rückfrage-Befehle mit Freigabe). eingeschränkt: nur freie Befehle. lesen: keine. Ohne Eintrag und für Automationen gilt eingeschränkt. Eine Rückfrage bestätigen kann, wer die Rolle voll hat, und jeder HA-Verwalter.',
+    'sec.no_users': 'Benutzerliste nicht verfügbar', 'sec.timeout': 'Rückfrage gilt', 'sec.poll_active': 'Abfrage aktiv', 'sec.poll_idle': 'in Ruhe',
+    'sec.trip_end': 'Fahrtende nach einem Halt von', 'sec.trip_end_hint': 'Hält das Auto kürzer, läuft die Fahrt im Bordcomputer weiter. So lange fragt das Gateway nach dem Abstellen weiter im aktiven Takt ab.',
+    'sec.levels': 'Befehle und Stufen', 'sec.command': 'Befehl', 'sec.level': 'Stufe',
+    'sec.levels_hint': 'Alles, was hier nicht steht (Einparken, Tempolimit, Updates, Sentry und mehr), ist im Gateway nicht vorhanden.',
+    'sec.fixed': 'Nur in den App-Optionen änderbar: Cloud {cloud}, {mode}', 'sec.dry_run': 'Trockenlauf', 'sec.live': 'scharf',
+    'level.free': 'frei', 'level.approval': 'Rückfrage', 'level.blocked': 'gesperrt', 'role.full': 'voll', 'role.limited': 'eingeschränkt', 'role.read': 'lesen',
+    'save': 'Speichern', 'saved_at': 'gespeichert {time}', 'error': 'Fehler: {msg}',
+    'log.time': 'Zeit', 'log.command': 'Befehl', 'log.vehicle': 'Fahrzeug', 'log.who': 'Wer', 'log.result': 'Ergebnis', 'log.empty': 'noch nichts',
+    'cmd.lock': 'Verriegeln', 'cmd.climate_on': 'Klima an', 'cmd.climate_off': 'Klima aus', 'cmd.quick_heat': 'Schnell heizen',
+    'cmd.quick_cool': 'Schnell kühlen', 'cmd.defrost_windshield': 'Scheibe auftauen', 'cmd.battery_preheat': 'Batterie vorwärmen',
+    'cmd.battery_preheat_off': 'Batterievorwärmung aus', 'cmd.close_windows': 'Fenster schließen', 'cmd.close_sunshade': 'Sonnenrollo schließen',
+    'cmd.close_trunk': 'Kofferraum schließen', 'cmd.stop_charging': 'Laden stoppen', 'cmd.unlock': 'Entriegeln', 'cmd.open_trunk': 'Kofferraum öffnen',
+    'cmd.open_windows': 'Fenster öffnen (Spalt)', 'cmd.open_sunshade': 'Sonnenrollo öffnen', 'cmd.release_charging_cable': 'Ladekabel freigeben',
+    'cmd.start_charging': 'Laden starten', 'cmd.locate_vehicle': 'Fahrzeug orten (Hupe und Licht)',
+  },
+};
+const t = (key, vars = {}) => (TEXTS[LANG][key] ?? TEXTS.en[key] ?? key).replace(/\{(\w+)\}/g, (_, k) => vars[k] ?? '');
+document.documentElement.lang = LANG;
+document.querySelectorAll('[data-t]').forEach(e => e.textContent = t(e.dataset.t));
+document.querySelectorAll('[data-tp]').forEach(e => e.placeholder = t(e.dataset.tp));
+document.querySelectorAll('[data-tt]').forEach(e => e.title = t(e.dataset.tt));
+
+// Take over the Home Assistant theme: the ingress page has the same origin as Home Assistant.
+const THEME = ['--primary-color','--accent-color','--primary-text-color','--secondary-text-color','--text-primary-color','--primary-background-color',
+  '--secondary-background-color','--card-background-color','--ha-card-background','--divider-color','--error-color','--warning-color','--success-color',
+  '--ha-card-border-radius','--ha-card-border-color','--ha-card-box-shadow','--ha-font-family-body','--mdc-typography-font-family'];
+function theme() {
+  try {
+    const p = window.parent !== window && window.parent.document; if (!p) return;
+    const cs = getComputedStyle(p.documentElement), root = document.documentElement;
+    let found = false;
+    for (const v of THEME) { const w = cs.getPropertyValue(v).trim(); if (w) { root.style.setProperty(v, w); found = true; } }
+    root.classList.toggle('ha', found);
+  } catch (e) { /* opened on its own: fallback values */ }
+}
+theme(); setInterval(theme, 5000);
+
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const LOCALE = navigator.language || 'en';
+const num = (v, n = 0) => v == null || isNaN(v) ? '–' : Number(v).toLocaleString(LOCALE, {minimumFractionDigits: n, maximumFractionDigits: n});
+const time = s => s ? new Date(s).toLocaleString(LOCALE, {day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit'}) : '–';
+const date = s => s ? new Date(s).toLocaleDateString(LOCALE, {day:'2-digit', month:'2-digit', year:'numeric'}) : '–';
+const LEVEL_CHIP = {free: 'ok', approval: 'warn', blocked: 'bad'};
+const cmdTitle = (name, fallback) => TEXTS[LANG]['cmd.' + name] || TEXTS.en['cmd.' + name] || fallback || name;
+async function api(path, opt = {}) {
+  const r = await fetch(path, opt);
+  if (!r.ok) { let m = r.statusText; try { m = (await r.json()).detail || m; } catch (e) {} throw new Error(m); }
+  return r.headers.get('content-type')?.includes('json') ? r.json() : r.text();
+}
+const json = (method, data) => ({method, headers: {'Content-Type': 'application/json'}, body: JSON.stringify(data)});
+function report(id, text, error) { const e = $(id); e.textContent = text; e.style.color = error ? 'var(--error-color)' : 'var(--secondary-text-color)'; }
+
+// Tabs
+let tab = 'vehicles';
+document.querySelectorAll('#tabs button').forEach(b => b.onclick = () => {
+  tab = b.dataset.tab;
+  document.querySelectorAll('#tabs button').forEach(x => x.classList.toggle('on', x === b));
+  document.querySelectorAll('main > section').forEach(s => s.classList.toggle('hidden', s.id !== 'tab-' + tab));
+  ({accounts: accounts, security: security, log: showLog})[tab]?.();
+});
+
+// Vehicles
+function vehicleCard(f) {
+  const v = f.values || {}, x = f.extras || {};
+  const doors = [['driver_door','door.driver'],['passenger_door','door.passenger'],['rear_left_door','door.rear_left'],['rear_right_door','door.rear_right'],['trunk','door.trunk']]
+    .filter(([k]) => v[k]).map(([, n]) => t(n));
+  const windows = ['window_fl','window_fr','window_rl','window_rr'].filter(k => v[k] > 0).length;
+  const tyres = ['tyre_fl','tyre_fr','tyre_rl','tyre_rr'].map(k => num(v[k], 2)).join(' · ');
+  const value = (title, content, extra = '', cls = '') => `<div class="value"><span class="muted">${title}</span><b class="${cls}">${content}</b>${extra}</div>`;
+  const charging = v.charging ? t('car.charging_at', {kw: num(v.charging_power, 1)}) : (v.ac_cable || v.dc_cable ? t('car.plugged_in') : t('car.no'));
+  return `<div class="card"><div class="head" style="margin:0 0 12px"><h2 style="margin:0">${esc(f.name || f.vin)}</h2>
+    <div><span class="chip ${v.locked ? 'ok' : 'warn'}">${v.locked ? t('car.locked') : (v.locked === false ? t('car.open') : '–')}</span>
+    ${f.plate ? `<span class="chip">${esc(f.plate)}</span>` : ''}<span class="chip ${f.enabled ? '' : 'warn'}">${f.enabled ? t('car.enabled') : t('car.disabled')}</span><span class="chip ${f.pin_set ? 'warn' : 'ok'}">${f.pin_set ? t('car.pin_stored') : t('car.no_pin')}</span></div></div>
+    <div class="vehicle">${f.image_hash ? `<img src="api/image/${encodeURIComponent(f.vin)}?h=${esc(f.image_hash)}" alt="">` : `<div class="muted">${t('car.no_image')}</div>`}
+    <div><div class="grid">
+      ${value(t('car.battery'), num(v.battery) + ' %', `<div class="bar"><span style="width:${Math.max(0, Math.min(100, Number(v.battery) || 0))}%"></span></div>`)}
+      ${value(t('car.range'), num(v.range) + ' km')}${value(t('car.energy'), num(v.energy, 1) + ' kWh')}${value(t('car.odometer'), num(v.odometer) + ' km')}
+      ${value(t('car.charging'), esc(charging))}
+      ${value(t('car.outside'), num(v.outside_temp) + ' °C')}${value(t('car.doors'), doors.length ? esc(doors.join(', ')) : t('car.closed'))}${value(t('car.windows'), windows ? t('car.windows_open', {n: windows}) : t('car.closed'))}
+      ${value(t('car.tyres'), tyres, '', 'text')}${value(t('car.climate'), v.climate ? t('car.on') : t('car.off'))}
+      ${x.week_driving_percent != null ? value(t('car.week'), `${num(x.week_driving_percent)} / ${num(x.week_climate_percent)} / ${num(x.week_other_percent)} %`, `<span class="muted">${t('car.week_parts')}</span>`) : ''}
+      ${x.last_message ? value(t('car.message'), esc(x.last_message), `<span class="muted">${time(x.last_message_time)}</span>`, 'text') : ''}
+    </div><div class="muted" style="margin-top:10px">${esc(f.status)} · ${t('car.data_from')} ${time(v.vehicle_time)} · ${t('car.polled')} ${time(f.last_poll)} · VIN …${esc(f.vin.slice(-6))}</div></div></div></div>`;
+}
+async function status() {
+  const s = await api('api/status');
+  $('#status').textContent = s.status;
+  $('#chips').innerHTML = s.demo_mode ? `<span class="chip warn">${t('chip.demo')}</span>`
+    : `<span class="chip ${s.cloud_enabled ? 'ok' : 'warn'}">${s.cloud_enabled ? t('chip.cloud_on') : t('chip.cloud_off')}</span>
+    <span class="chip ${s.dry_run ? 'warn' : 'bad'}">${s.dry_run ? t('chip.dry_run') : t('chip.live')}</span>
+    <span class="chip ${s.certificate.present ? 'ok' : 'bad'}">${s.certificate.present ? t('chip.cert_present') : t('chip.cert_missing')}</span>`;
+  $('#vehicles').innerHTML = s.vehicles.map(vehicleCard).join('') || `<div class="card">${t('vehicles.empty')}</div>`;
+  $('#approvals').innerHTML = s.approvals.length ? s.approvals.map(a => `<div class="row">${esc(a.vehicle || '')} · ${esc(cmdTitle(a.action, a.title))} · ${esc(a.user || '')} · ${t('approvals.expires')} ${time(a.expires * 1000)}
+    <button class="btn bad" data-id="${esc(a.id)}" onclick="reject(this.dataset.id)">${t('reject')}</button></div>`).join('') : t('approvals.none');
+}
+async function reject(id) { await api(`api/approvals/${encodeURIComponent(id)}/reject`, {method: 'POST'}); status(); }
+
+// Accounts
+async function accounts() {
+  const k = await api('api/accounts');
+  const c = k.certificate;
+  $('#cert').innerHTML = c.present ? `<span class="chip ok">${t('cert.present')}</span> ${t('cert.valid_until')} ${date(c.valid_until)}${c.error ? ' · ' + esc(c.error) : ''}`
+    : `<span class="chip bad">${t('cert.missing')}</span> ${t('cert.missing_hint')}`;
+  $('#accounts').innerHTML = k.accounts.map(a => `<div class="entry"><div class="who">${esc(a.username)}
+      <div class="muted">${t('accounts.vehicles', {n: k.vehicles.filter(f => f.account === a.id).length})}</div></div>
+    <div class="buttons"><button class="btn" data-id="${esc(a.id)}" onclick="fetchVehicles(this.dataset.id, this)">${t('accounts.fetch')}</button>
+    <button class="btn" data-id="${esc(a.id)}" onclick="changePassword(this.dataset.id)">${t('accounts.change_pw')}</button>
+    <button class="btn bad" data-id="${esc(a.id)}" data-name="${esc(a.username)}" onclick="removeAccount(this.dataset.id, this.dataset.name)">${t('accounts.remove')}</button></div></div>`).join('')
+    || `<div class="muted">${t('accounts.none')}</div>`;
+  $('#v-list').innerHTML = k.vehicles.map(f => `<div class="vform" data-vin="${esc(f.vin)}">
+    <label>${t('vehicles.name')}<input type="text" class="v-name" value="${esc(f.name)}" maxlength="40"></label>
+    <label>${t('vehicles.plate')}<input type="text" class="v-plate" value="${esc(f.plate || '')}" maxlength="16" placeholder="${esc(t('vehicles.plate_example'))}" autocapitalize="characters"></label>
+    <label>${t('vehicles.pin')}<input class="v-pin" type="password" inputmode="numeric" autocomplete="new-password" placeholder="${esc(f.pin_set ? t('vehicles.pin_set') : t('vehicles.no_pin'))}"></label>
+    <label class="check"><input type="checkbox" class="v-enabled"${f.enabled ? ' checked' : ''}> ${t('vehicles.poll')}</label>
+    <div class="buttons"><button class="btn main" data-vin="${esc(f.vin)}" onclick="saveVehicle(this.dataset.vin, this)">${t('save')}</button>
+      ${f.pin_set ? `<button class="btn bad" data-vin="${esc(f.vin)}" onclick="deletePin(this.dataset.vin)">${t('vehicles.delete_pin')}</button>` : ''}</div>
+    <div class="muted" style="grid-column:1/-1">VIN …${esc(f.vin.slice(-6))} · ${esc(f.model)}</div></div>`).join('')
+    || `<div class="muted">${t('vehicles.none')}</div>`;
+}
+async function addAccount(b) {
+  b.disabled = true;
+  try { await api('api/accounts', json('POST', {username: $('#a-user').value, password: $('#a-pw').value}));
+        $('#a-user').value = $('#a-pw').value = ''; report('#a-m', t('accounts.added')); await accounts(); }
+  catch (e) { report('#a-m', e.message, true); }
+  b.disabled = false;
+}
+async function fetchVehicles(id, b) {
+  b.disabled = true; b.textContent = t('accounts.fetching');
+  try { const r = await api(`api/accounts/${encodeURIComponent(id)}/fetch`, {method: 'POST'}); report('#a-m', t('accounts.found', {n: r.vehicles.length})); }
+  catch (e) { report('#a-m', e.message, true); }
+  await accounts(); status();
+}
+async function changePassword(id) {
+  const pw = prompt(t('accounts.new_pw')); if (!pw) return;
+  try { await api(`api/accounts/${encodeURIComponent(id)}`, json('PUT', {password: pw})); report('#a-m', t('accounts.pw_changed')); } catch (e) { report('#a-m', e.message, true); }
+}
+async function removeAccount(id, name) {
+  if (!confirm(t('accounts.confirm_remove', {name}))) return;
+  await api(`api/accounts/${encodeURIComponent(id)}`, {method: 'DELETE'}); await accounts(); status();
+}
+async function saveVehicle(vin, b) {
+  const form = [...document.querySelectorAll('.vform')].find(e => e.dataset.vin === vin), pin = form.querySelector('.v-pin').value;
+  const data = {name: form.querySelector('.v-name').value, enabled: form.querySelector('.v-enabled').checked,
+                plate: form.querySelector('.v-plate').value};
+  if (pin) data.pin = pin;
+  b.disabled = true;
+  try { await api(`api/vehicles/${encodeURIComponent(vin)}`, json('PUT', data)); report('#a-m', t('vehicles.saved')); await accounts(); status(); }
+  catch (e) { report('#a-m', e.message, true); b.disabled = false; }
+}
+async function deletePin(vin) {
+  if (!confirm(t('vehicles.confirm_pin'))) return;
+  await api(`api/vehicles/${encodeURIComponent(vin)}`, json('PUT', {pin: ''})); await accounts(); status();
+}
+async function uploadCert(b) {
+  const c = $('#c-cert').files[0], k = $('#c-key').files[0];
+  if (!c || !k) { report('#c-m', t('cert.both'), true); return; }
+  const fd = new FormData(); fd.append('certificate', c); fd.append('key', k);
+  b.disabled = true;
+  try { await api('api/certificate', {method: 'POST', body: fd}); report('#c-m', t('vehicles.saved')); await accounts(); status(); }
+  catch (e) { report('#c-m', e.message, true); }
+  b.disabled = false;
+}
+
+// Security
+async function security() {
+  const d = await api('api/settings'), v = d.values, ch = d.choices;
+  const targets = [...new Set([...ch.notify, ...v.notify_targets])];
+  $('#targets').innerHTML = targets.map(n => `<label style="margin-right:14px"><input type="checkbox" class="target" value="${esc(n)}"${v.notify_targets.includes(n) ? ' checked' : ''}> ${esc(n.replace('notify.mobile_app_', ''))}</label>`).join('') || t('sec.no_app');
+  $('#users').innerHTML = ch.users.length ? `<tr><th>${t('sec.person')}</th><th>${t('sec.role')}</th></tr>` + ch.users.map(u => {
+      const r = v.roles[u.id] || 'limited';
+      return `<tr><td>${esc(u.name)}</td><td><select class="role" data-id="${esc(u.id)}">${['full','limited','read'].map(o => `<option value="${o}"${o === r ? ' selected' : ''}>${t('role.' + o)}</option>`).join('')}</select></td></tr>`; }).join('')
+    : `<tr><td>${esc(ch.users_error || t('sec.no_users'))}</td></tr>`;
+  $('#timeout').value = v.approval_timeout_s; $('#active').value = v.poll_active_s; $('#idle').value = v.poll_idle_min; $('#trip-end').value = v.trip_end_min; $('#push').checked = v.approval_push;
+  $('#levels').innerHTML = `<tr><th>${t('sec.command')}</th><th>${t('sec.level')}</th></tr>` + Object.entries(v.levels).map(([n, lv]) =>
+    `<tr><td>${esc(cmdTitle(n, d.commands[n]))}</td><td><select class="level" data-n="${esc(n)}">${['free','approval','blocked'].map(o => `<option value="${o}"${o === lv ? ' selected' : ''}>${t('level.' + o)}</option>`).join('')}</select>
+     <span class="chip ${LEVEL_CHIP[lv]}">${t('level.' + lv)}</span></td></tr>`).join('');
+  $('#fixed').textContent = t('sec.fixed', {cloud: d.fixed.cloud_enabled ? t('car.on') : t('car.off'), mode: d.fixed.dry_run ? t('sec.dry_run') : t('sec.live')});
+}
+async function saveSecurity(b) {
+  const data = {notify_targets: [...document.querySelectorAll('.target:checked')].map(e => e.value),
+    approval_timeout_s: +$('#timeout').value, poll_active_s: +$('#active').value, poll_idle_min: +$('#idle').value, trip_end_min: +$('#trip-end').value, approval_push: $('#push').checked,
+    levels: Object.fromEntries([...document.querySelectorAll('.level')].map(e => [e.dataset.n, e.value])),
+    roles: Object.fromEntries([...document.querySelectorAll('.role')].filter(e => e.value !== 'limited').map(e => [e.dataset.id, e.value]))};
+  b.disabled = true;
+  try { await api('api/settings', json('PUT', data)); report('#s-m', t('saved_at', {time: new Date().toLocaleTimeString(LOCALE)})); await security(); }
+  catch (e) { report('#s-m', e.message, true); }
+  b.disabled = false;
+}
+
+// Log
+async function showLog() {
+  const p = await api('api/log');
+  $('#log').innerHTML = `<tr><th>${t('log.time')}</th><th>${t('log.command')}</th><th>${t('log.vehicle')}</th><th>${t('log.who')}</th><th>${t('log.result')}</th></tr>` + (p.map(e =>
+    `<tr><td>${time(e.time)}</td><td>${esc(cmdTitle(e.action, e.action))}</td><td class="muted">${e.vin ? '…' + esc(String(e.vin).slice(-6)) : ''}</td>
+     <td>${esc(e.user || e.source)}</td><td>${esc(e.result)}</td></tr>`).join('') || `<tr><td colspan="5" class="muted">${t('log.empty')}</td></tr>`);
+}
+
+status().catch(e => $('#status').textContent = t('error', {msg: e.message}));
+setInterval(() => { if (tab === 'vehicles') status(); if (tab === 'log') showLog(); }, 10000);
+</script>
+</body>
+</html>

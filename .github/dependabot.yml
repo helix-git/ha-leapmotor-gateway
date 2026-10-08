@@ -1,0 +1,43 @@
+version: 2
+# Weekly checks. New versions only after a waiting time of 7 days (14 for major versions of Python
+# packages): a compromised release is usually found and pulled within days. Security updates are not
+# delayed. Nothing merges by itself: tests show that an update works, not that it is benign, so every
+# update is reviewed before the merge.
+updates:
+  - package-ecosystem: pip
+    directory: /addon
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 7
+      semver-major-days: 14
+    groups:
+      app:
+        update-types: [minor, patch]
+  # Test dependencies of the app and the dashboard. The Home Assistant test environment
+  # (.github/requirements-ha) is updated by hand, see the note there.
+  - package-ecosystem: pip
+    directory: /.github/requirements
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 7
+      semver-major-days: 14
+    groups:
+      tests:
+        update-types: [minor, patch]
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 7
+    groups:
+      actions:
+        update-types: [minor, patch]
+  - package-ecosystem: docker
+    directory: /addon
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 7

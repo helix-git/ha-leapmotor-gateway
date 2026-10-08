@@ -1,0 +1,374 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Leapmotor Gateway",
+        "data": {
+          "host": "Host",
+          "port": "Port",
+          "token": "Token"
+        }
+      },
+      "hassio_confirm": {
+        "title": "Leapmotor Gateway",
+        "description": "The Leapmotor Gateway app was found. Set it up?"
+      }
+    },
+    "error": {
+      "cannot_connect": "Gateway not reachable or token wrong"
+    },
+    "abort": {
+      "already_configured": "Already configured",
+      "cannot_connect": "Gateway not reachable"
+    }
+  },
+  "services": {
+    "command": {
+      "name": "Command to the car",
+      "description": "Sent to the app together with the triggering user. The app decides on role, level and approval.",
+      "fields": {
+        "action": {
+          "name": "Action",
+          "description": "Command from the allowlist"
+        },
+        "params": {
+          "name": "Parameters",
+          "description": "Only for climate_on (mode, temperature, fan_speed, recirculation) and open_windows (percent)"
+        },
+        "vin": {
+          "name": "VIN",
+          "description": "Only needed if the app has several vehicles"
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "battery": {
+        "name": "Battery"
+      },
+      "range": {
+        "name": "Range"
+      },
+      "energy": {
+        "name": "Available energy"
+      },
+      "odometer": {
+        "name": "Odometer"
+      },
+      "speed": {
+        "name": "Speed"
+      },
+      "gear": {
+        "name": "Gear",
+        "state": {
+          "park": "Park",
+          "drive": "Drive",
+          "neutral": "Neutral",
+          "reverse": "Reverse"
+        }
+      },
+      "charge_state": {
+        "name": "Charge state",
+        "state": {
+          "not_charging": "Not charging",
+          "charging": "Charging",
+          "finish": "Finished",
+          "error": "Error",
+          "setting": "Setting up",
+          "regening": "Regenerating"
+        }
+      },
+      "charge_time_left": {
+        "name": "Charge time left"
+      },
+      "charging_power": {
+        "name": "Charging power"
+      },
+      "battery_current": {
+        "name": "Battery current"
+      },
+      "battery_voltage": {
+        "name": "Battery voltage"
+      },
+      "battery_temp_min": {
+        "name": "Battery temperature min"
+      },
+      "outside_temp": {
+        "name": "Outside temperature"
+      },
+      "target_temp_left": {
+        "name": "Target temperature"
+      },
+      "fan_speed": {
+        "name": "Fan speed"
+      },
+      "sunshade": {
+        "name": "Sunshade"
+      },
+      "window_fl": {
+        "name": "Window front left"
+      },
+      "window_fr": {
+        "name": "Window front right"
+      },
+      "window_rl": {
+        "name": "Window rear left"
+      },
+      "window_rr": {
+        "name": "Window rear right"
+      },
+      "tyre_fl": {
+        "name": "Tyre pressure front left"
+      },
+      "tyre_fr": {
+        "name": "Tyre pressure front right"
+      },
+      "tyre_rl": {
+        "name": "Tyre pressure rear left"
+      },
+      "tyre_rr": {
+        "name": "Tyre pressure rear right"
+      },
+      "vehicle_time": {
+        "name": "Vehicle data from"
+      },
+      "today_driving_percent": {
+        "name": "Driving energy today"
+      },
+      "today_climate_percent": {
+        "name": "Climate energy today"
+      },
+      "today_other_percent": {
+        "name": "Other energy today"
+      },
+      "week_driving_percent": {
+        "name": "Driving energy last week"
+      },
+      "week_climate_percent": {
+        "name": "Climate energy last week"
+      },
+      "week_other_percent": {
+        "name": "Other energy last week"
+      },
+      "total_energy_kwh": {
+        "name": "Total energy consumption"
+      },
+      "distance_7_days_km": {
+        "name": "Distance last 7 days"
+      },
+      "consumption_6_weeks": {
+        "name": "Average consumption 6 weeks"
+      },
+      "messages_unread": {
+        "name": "Unread messages"
+      },
+      "last_message": {
+        "name": "Last message"
+      },
+      "trip_end_min": {
+        "name": "Trip ends after"
+      },
+      "plate": {
+        "name": "Licence plate"
+      },
+      "tyre_pressure": {
+        "name": "Tyre pressure"
+      },
+      "charge_end_forecast": {
+        "name": "Charge end (forecast)"
+      },
+      "energy_to_charge": {
+        "name": "Energy to charge"
+      },
+      "state": {
+        "name": "State",
+        "state": {
+          "driving": "Driving",
+          "charging": "Charging",
+          "plugged_in": "Plugged in",
+          "parked": "Parked"
+        }
+      },
+      "trip_distance": {
+        "name": "Trip distance"
+      },
+      "trip_duration": {
+        "name": "Trip duration"
+      },
+      "trip_energy": {
+        "name": "Trip energy"
+      },
+      "trip_consumption": {
+        "name": "Trip consumption"
+      },
+      "since_charge_distance": {
+        "name": "Distance since charge"
+      },
+      "since_charge_energy": {
+        "name": "Energy since charge"
+      },
+      "since_charge_consumption": {
+        "name": "Consumption since charge"
+      },
+      "last_charge": {
+        "name": "Last charge"
+      },
+      "charges": {
+        "name": "Charges"
+      },
+      "trips": {
+        "name": "Trips"
+      },
+      "status": {
+        "name": "Gateway status"
+      },
+      "approvals_pending": {
+        "name": "Pending approvals"
+      },
+      "last_command": {
+        "name": "Last command"
+      }
+    },
+    "binary_sensor": {
+      "charging": {
+        "name": "Charging"
+      },
+      "ac_cable": {
+        "name": "AC cable"
+      },
+      "dc_cable": {
+        "name": "DC cable"
+      },
+      "ready": {
+        "name": "Ready to drive"
+      },
+      "climate": {
+        "name": "Climate"
+      },
+      "driver_door": {
+        "name": "Driver door"
+      },
+      "passenger_door": {
+        "name": "Passenger door"
+      },
+      "rear_left_door": {
+        "name": "Rear door left"
+      },
+      "rear_right_door": {
+        "name": "Rear door right"
+      },
+      "trunk": {
+        "name": "Trunk"
+      }
+    },
+    "button": {
+      "button_climate_off": {
+        "name": "Climate off"
+      },
+      "button_quick_heat": {
+        "name": "Quick heat"
+      },
+      "button_quick_cool": {
+        "name": "Quick cool"
+      },
+      "button_defrost_windshield": {
+        "name": "Defrost windshield"
+      },
+      "button_battery_preheat": {
+        "name": "Preheat battery"
+      },
+      "button_battery_preheat_off": {
+        "name": "Battery preheat off"
+      },
+      "button_close_windows": {
+        "name": "Close windows"
+      },
+      "button_open_windows": {
+        "name": "Open windows (gap)"
+      },
+      "button_close_sunshade": {
+        "name": "Close sunshade"
+      },
+      "button_open_sunshade": {
+        "name": "Open sunshade"
+      },
+      "button_close_trunk": {
+        "name": "Close trunk"
+      },
+      "button_open_trunk": {
+        "name": "Open trunk"
+      },
+      "button_start_charging": {
+        "name": "Start charging"
+      },
+      "button_stop_charging": {
+        "name": "Stop charging"
+      },
+      "button_release_charging_cable": {
+        "name": "Release charging cable"
+      },
+      "button_locate_vehicle": {
+        "name": "Locate vehicle (horn and lights)"
+      },
+      "button_refresh": {
+        "name": "Refresh data"
+      },
+      "button_lock": {
+        "name": "Lock"
+      },
+      "button_unlock": {
+        "name": "Unlock"
+      },
+      "button_climate_on": {
+        "name": "Climate on"
+      },
+      "start_climate": {
+        "name": "Start climate"
+      }
+    },
+    "lock": {
+      "lock": {
+        "name": "Lock"
+      }
+    },
+    "climate": {
+      "climate_control": {
+        "name": "Climate"
+      }
+    },
+    "image": {
+      "image": {
+        "name": "Vehicle image"
+      }
+    },
+    "device_tracker": {
+      "location": {
+        "name": "Location"
+      }
+    },
+    "select": {
+      "preset_mode": {
+        "name": "Climate mode",
+        "state": {
+          "hot": "Heating",
+          "cold": "Cooling",
+          "wind": "Ventilation"
+        }
+      }
+    },
+    "number": {
+      "preset_temperature": {
+        "name": "Preset temperature"
+      },
+      "preset_fan_speed": {
+        "name": "Preset fan speed"
+      }
+    },
+    "switch": {
+      "preset_recirculation": {
+        "name": "Recirculation"
+      }
+    }
+  }
+}

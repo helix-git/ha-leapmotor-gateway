@@ -1,0 +1,48 @@
+name: PR report
+
+# Once every required check of a pull request has finished, one comment in the pull request sums
+# up the result and what happens next. Reads check results only, never runs code of the PR.
+on:
+  workflow_run:
+    workflows: [Tests, Stack, HAOS]
+    types: [completed]
+
+permissions:
+  contents: read
+
+jobs:
+  report:
+    if: github.event.workflow_run.event == 'pull_request' && github.event.workflow_run.pull_requests[0] != null
+    runs-on: ubuntu-24.04
+    permissions:
+      checks: read
+      pull-requests: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      REPO: ${{ github.repository }}
+      SHA: ${{ github.event.workflow_run.head_sha }}
+      PR: ${{ github.event.workflow_run.pull_requests[0].number }}
+    steps:
+      - name: Comment the result
+        run: |
+          required='["app","integration","frontend","lint","Home Assistant stable","HAOS stable"]'
+          checks=$(gh api "repos/$REPO/commits/$SHA/check-runs?per_page=100" \
+            --jq '[.check_runs[] | {name, status, conclusion}] | group_by(.name) | map(last)')
+          pending=$(jq -r --argjson r "$required" '[$r[] as $n | select(([.[] | select(.name == $n and .status == "completed")] | length) == 0) | $n] | join(", ")' <<< "$checks")
+          if [ -n "$pending" ]; then echo "Still waiting for: $pending"; exit 0; fi
+          failed=$(jq -r '[.[] | select(.status == "completed" and (.conclusion | IN("success", "skipped", "neutral") | not)) | .name] | join(", ")' <<< "$checks")
+          total=$(jq 'length' <<< "$checks")
+          if [ -n "$failed" ]; then
+            head="❌ Failed: $failed. Do not merge."
+          else
+            head="✅ All $total checks passed, including the stack test and the HAOS test. Ready for review."
+          fi
+          table=$(jq -r '.[] | "| \(.name) | \(.conclusion // .status) |"' <<< "$checks")
+          body=$(printf '<!-- pr-report -->\n%s\n\n| Check | Result |\n|---|---|\n%s\n\nCommit %s' "$head" "$table" "${SHA:0:7}")
+          id=$(gh api "repos/$REPO/issues/$PR/comments" --jq '[.[] | select(.body | startswith("<!-- pr-report -->"))][0].id // empty')
+          if [ -n "$id" ]; then
+            gh api -X PATCH "repos/$REPO/issues/comments/$id" -f body="$body" --silent
+          else
+            gh pr comment "$PR" --repo "$REPO" --body "$body"
+          fi
+          echo "$head"

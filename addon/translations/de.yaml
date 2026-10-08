@@ -1,0 +1,22 @@
+configuration:
+  cloud_enabled:
+    name: Cloud aktiv
+    description: Erst einschalten, wenn in der App ein Konto eingetragen ist. Aus heißt keine Anmeldung bei Leapmotor.
+  dry_run:
+    name: Trockenlauf
+    description: Befehle werden geprüft und protokolliert, aber nicht ans Auto gesendet.
+  demo_mode:
+    name: Demo-Modus
+    description: Ein simuliertes Auto in Berlin, ohne Leapmotor-Konto. Nichts geht an die Cloud.
+  poll_active_s:
+    name: Abfrage aktiv (Sekunden)
+    description: Wenn das Auto fährt, lädt, eingesteckt oder entriegelt ist.
+  poll_idle_min:
+    name: Abfrage in Ruhe (Minuten)
+  notify:
+    name: Dienst für Rückfragen
+    description: Anfangswert. Die Geräte für Rückfragen werden in der App gewählt.
+  approval_timeout_s:
+    name: Gültigkeit einer Rückfrage (Sekunden)
+  log_level:
+    name: Protokollstufe

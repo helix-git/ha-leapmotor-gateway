@@ -1,0 +1,39 @@
+# Stack test: a real Home Assistant and the app in demo mode, with fixed addresses so the app can
+# tell Home Assistant (core) from the ingress client. Used by .github/workflows/stack.yml.
+name: lmgw-e2e
+networks:
+  e2e:
+    ipam:
+      config:
+        - subnet: 172.31.98.0/24
+services:
+  homeassistant:
+    image: ghcr.io/home-assistant/home-assistant:${HA_TAG:-stable}
+    volumes:
+      - ./work/config:/config
+    environment:
+      TZ: Europe/Berlin
+    ports:
+      - "127.0.0.1:${E2E_PORT:-8123}:8123"
+    networks:
+      e2e:
+        ipv4_address: 172.31.98.10
+  gateway:
+    image: ${GATEWAY_IMAGE:-lmgw-e2e-gateway}
+    # The app normally starts through s6 and bashio, which need the Supervisor.
+    entrypoint: ["python3", "-m", "uvicorn", "gateway:app", "--host", "0.0.0.0", "--port", "8789"]
+    working_dir: /app
+    env_file: ./work/gateway.env
+    environment:
+      TZ: Europe/Berlin
+      LG_DEMO_MODE: "true"
+      LG_STATE_DIR: /data
+      LG_HA_URL: http://172.31.98.10:8123
+      LG_CORE_IP: 172.31.98.10
+      LG_INGRESS_IP: 172.31.98.30
+    volumes:
+      - ./work/data:/data
+    networks:
+      e2e:
+        ipv4_address: 172.31.98.20
+    profiles: [gateway]

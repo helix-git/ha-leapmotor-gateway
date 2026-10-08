@@ -1,0 +1,3 @@
+-r ../../addon/requirements.in
+pytest
+httpx

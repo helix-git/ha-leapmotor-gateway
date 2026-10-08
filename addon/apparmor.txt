@@ -1,0 +1,84 @@
+#include <tunables/global>
+
+# Own profile instead of "default" (Home Assistant security rating +1). Built after the
+# template in the Home Assistant developer docs: the outer profile for s6-overlay, bashio and
+# the install step at start, a child profile for Python. The outer profile may write in the
+# Home Assistant configuration only to custom_components/leapmotor_gateway. Python may read
+# the program and the libraries, write only to /config (app config folder) and /tmp, and use
+# the network (Leapmotor cloud, Home Assistant through the Supervisor).
+profile leapmotor_gateway flags=(attach_disconnected,mediate_deleted) {
+  #include <abstractions/base>
+
+  signal (send) set=(kill,term,int,hup,cont),
+  network,
+  capability chown,
+  capability fowner,
+  capability dac_override,
+  capability setuid,
+  capability setgid,
+
+  # Everything in the container except the Home Assistant configuration. The start runs as
+  # root (s6-overlay, bashio, install step), so this is where the limit has to be.
+  /{,*} rwlk,
+  /{app,bin,command,data,config,dev,etc,home,integration,lib,media,mnt,opt,package,proc,root,run,sbin,srv,sys,tmp,usr,var}/ rwlk,
+  /{app,bin,command,data,config,dev,etc,home,integration,lib,media,mnt,opt,package,proc,root,run,sbin,srv,sys,tmp,usr,var}/** rwlk,
+  /{lib,usr/lib}/** m,
+
+  # Home Assistant configuration (map homeassistant_config): only the bundled integration,
+  # which install_integration.sh copies at start. Nothing else in that folder.
+  /homeassistant/ r,
+  /homeassistant/custom_components/ rw,
+  /homeassistant/custom_components/leapmotor_gateway{,.new}/ rw,
+  /homeassistant/custom_components/leapmotor_gateway{,.new}/** rwl,
+
+  # s6-overlay
+  /init ix,
+  /run.sh ix,
+  /bin/** ix,
+  /sbin/** ix,
+  /usr/bin/** ix,
+  /usr/sbin/** ix,
+  /run/{s6,s6-rc*,service}/** ix,
+  /package/** ix,
+  /command/** ix,
+  /etc/services.d/** rwix,
+  /etc/cont-init.d/** rwix,
+  /etc/cont-finish.d/** rwix,
+  /dev/tty rw,
+
+  # bashio
+  /usr/lib/bashio/** ix,
+
+  # Exact path: a wildcard (python3*) collides with /usr/bin/** ix
+  # ("conflicting x modifiers"). python3.12 is the base image 3.23.
+  /usr/bin/python3.12 cx -> gateway,
+
+  profile gateway flags=(attach_disconnected,mediate_deleted) {
+    #include <abstractions/base>
+
+    signal (receive) peer=*_leapmotor_gateway,
+
+    network inet stream,
+    network inet6 stream,
+    network inet dgram,
+    network inet6 dgram,
+    network unix stream,
+
+    /usr/bin/python3.12 rm,
+    /lib/** mr,
+    /usr/lib/** mr,
+    /etc/** r,
+    # The directory itself too: Python's import lists /app
+    # (otherwise: "Could not import module gateway").
+    /app/ r,
+    /app/** r,
+    /config/ r,
+    /config/** rwk,
+    /data/options.json r,
+    /tmp/** rwk,
+    /proc/** r,
+    /sys/kernel/mm/transparent_hugepage/** r,
+    /dev/urandom r,
+    /dev/null rw,
+  }
+}
