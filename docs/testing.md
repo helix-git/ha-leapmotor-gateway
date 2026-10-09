@@ -12,7 +12,7 @@ logs are attached as artifacts.
 | Stack | A real Home Assistant in Docker with the app image in demo mode (`e2e/run.py`). | pull request, push, nightly also the Home Assistant beta |
 | HAOS | Home Assistant OS in QEMU with KVM on the runner, the app installed through the real Supervisor (`e2e/haos.py`). | pull request, push, nightly also the newest HAOS beta |
 | CodeQL, Scorecard | Static analysis and supply chain checks. | push, weekly |
-| Nightly review | Claude reviews open Dependabot pull requests for supply chain risks and comments a recommendation. It merges nothing. | nightly |
+| Nightly review | Claude reviews open Dependabot pull requests for supply chain risks and comments a recommendation. It runs outside GitHub Actions and merges nothing. | nightly |
 
 Both end to end tests start from nothing: a fresh Home Assistant, onboarding through its API and a
 first install of the app.
