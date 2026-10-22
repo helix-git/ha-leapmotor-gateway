@@ -359,9 +359,9 @@ cryptography==50.0.2 \
     --hash=sha256:fa8f5efb344d6908a1ce62f4a24e2e5780f825d6f53f5f50ec5ffacac72936cb \
     --hash=sha256:fdd28f912fccfec1846a94e2e1e8f9b0012f557f0c46fe4f3eb0d7a87afcf90b
     # via leapmotor-api
-fastapi==0.142.4 \
-    --hash=sha256:7fe2e254a0a948b88f432b02b8f627463285248233bba0998ed9640191e2ff57 \
-    --hash=sha256:8a651aa071a9f92c8217cca1d0b044bf9c326f336578be0a728a1a1f22ec52d2
+fastapi==0.143.1 \
+    --hash=sha256:4cafaab64df8534758bf0fce61947f5e27e6cd512798ccbbaad5425086c3b664 \
+    --hash=sha256:687beb445804e4c4dbe2a76fd83c25e9b973ac48c267defb86f791e099baecc4
     # via -r requirements.in
 h11==0.16.0 \
     --hash=sha256:4e35b956cf45792e4caa5885e69fba00bdbc6ffafbfa020300e549b208ee5ff1 \
@@ -425,9 +425,9 @@ idna==3.20 \
     # via
     #   anyio
     #   requests
-leapmotor-api==0.3.2 \
-    --hash=sha256:13352de8552276b2a739bc8afb19e7bd863868fc7f50b09dccec7373cb34d2f2 \
-    --hash=sha256:5f9c06aee394958fbbba3365184fd1f2666f34ba41805aa1cc5776564d42568c
+leapmotor-api==0.6.0 \
+    --hash=sha256:29325d98bb7966124ce5785bf170f5afb08ac1897f9fa4dc277f81f41e7be2dd \
+    --hash=sha256:3d304d9a8033b6dcbc47d3cd5bcfd143e380327e02479bfe3800e76e9c1c8813
     # via -r requirements.in
 opentelemetry-api==1.45.1 \
     --hash=sha256:aa38ed19bcc084ba42782a73255b3582283eced7ad6dddbd6695189e69adfb75 \
